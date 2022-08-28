@@ -1,6 +1,5 @@
 package com.jdawg3636.icbm.common.block.launcher_control_panel;
 
-import com.jdawg3636.icbm.ICBM;
 import com.jdawg3636.icbm.ICBMReference;
 import com.jdawg3636.icbm.common.block.multiblock.AbstractBlockMachineTile;
 import com.jdawg3636.icbm.common.block.multiblock.IMissileLaunchApparatus;
@@ -41,6 +40,7 @@ public class BlockLauncherControlPanel extends AbstractBlockMachineTile implemen
         builder.add(TRIGGERED);
     }
 
+    @SuppressWarnings("deprecation")
     public ActionResultType use(BlockState blockState, World world, BlockPos blockPos, PlayerEntity playerEntity, Hand hand, BlockRayTraceResult blockRayTraceResult) {
         TileEntity tileEntity = world.getBlockEntity(blockPos);
         if (tileEntity instanceof TileLauncherControlPanel) {
@@ -56,6 +56,7 @@ public class BlockLauncherControlPanel extends AbstractBlockMachineTile implemen
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void neighborChanged(BlockState blockState, World level, BlockPos blockPos, Block p_220069_4_, BlockPos p_220069_5_, boolean p_220069_6_) {
         if (!level.isClientSide) {
@@ -64,7 +65,7 @@ public class BlockLauncherControlPanel extends AbstractBlockMachineTile implemen
             if (flagHasSignal && !flagStateTriggered) {
                 level.setBlock(blockPos, blockState.setValue(TRIGGERED, Boolean.TRUE), 4);
                 TileEntity tileentity = level.getBlockEntity(blockPos);
-                if (tileentity instanceof TileLauncherControlPanel) ((TileLauncherControlPanel)tileentity).launchMissile();
+                if (tileentity instanceof ITileLaunchControlPanel) ((ITileLaunchControlPanel)tileentity).launchMissile();
             } else if (!flagHasSignal && flagStateTriggered) {
                 level.setBlock(blockPos, blockState.setValue(TRIGGERED, Boolean.FALSE), 4);
             }

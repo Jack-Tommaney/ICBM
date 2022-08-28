@@ -5,7 +5,6 @@ import com.jdawg3636.icbm.common.entity.EntityMissile;
 import net.minecraft.command.impl.data.EntityDataAccessor;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
-
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ShootableItem;
 import net.minecraft.nbt.CompoundNBT;
@@ -21,6 +20,10 @@ import org.apache.logging.log4j.Level;
 import java.util.function.Predicate;
 
 public class ItemRocketLauncher extends ShootableItem {
+
+    public ItemRocketLauncher() {
+        this(new Item.Properties().tab(ICBMReference.CREATIVE_TAB));
+    }
 
     public ItemRocketLauncher(Properties properties) {
         super(properties);

@@ -6,7 +6,7 @@ import com.jdawg3636.icbm.common.reg.*;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.*;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -41,6 +41,7 @@ public final class ICBM {
                 BlastManagerThreadReg.BLAST_MANAGER_THREADS,
                 BlockReg.BLOCKS,
                 ContainerReg.CONTAINERS,
+                EffectReg.EFFECTS,
                 EntityReg.ENTITIES,
                 ItemReg.ITEMS,
                 ParticleTypeReg.PARTICLES,

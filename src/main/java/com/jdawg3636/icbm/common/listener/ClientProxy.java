@@ -1,16 +1,19 @@
 package com.jdawg3636.icbm.common.listener;
 
 import com.jdawg3636.icbm.ICBMReference;
+import com.jdawg3636.icbm.common.block.cruise_launcher.ContainerCruiseLauncher;
+import com.jdawg3636.icbm.common.block.cruise_launcher.ScreenCruiseLauncher;
 import com.jdawg3636.icbm.common.block.cruise_launcher.TERCruiseLauncher;
 import com.jdawg3636.icbm.common.block.cruise_launcher.TileCruiseLauncher;
 import com.jdawg3636.icbm.common.block.emp_tower.TEREMPTower;
 import com.jdawg3636.icbm.common.block.emp_tower.TileEMPTower;
+import com.jdawg3636.icbm.common.block.launcher_control_panel.IScreenLaunchControlPanel;
 import com.jdawg3636.icbm.common.block.launcher_control_panel.ScreenLauncherControlPanel;
 import com.jdawg3636.icbm.common.block.launcher_control_panel.TileLauncherControlPanel;
+import com.jdawg3636.icbm.common.block.launcher_platform.ScreenLauncherPlatform;
 import com.jdawg3636.icbm.common.block.radar_station.TERRadarStation;
 import com.jdawg3636.icbm.common.block.radar_station.TileRadarStation;
 import com.jdawg3636.icbm.common.entity.*;
-import com.jdawg3636.icbm.common.block.launcher_platform.ScreenLauncherPlatform;
 import com.jdawg3636.icbm.common.item.ItemTracker;
 import com.jdawg3636.icbm.common.particle.ColoredSmokeParticle;
 import com.jdawg3636.icbm.common.reg.*;
@@ -19,6 +22,9 @@ import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.client.particle.IAnimatedSprite;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
+import net.minecraft.client.renderer.entity.SpriteRenderer;
+import net.minecraft.client.renderer.entity.TNTMinecartRenderer;
+import net.minecraft.item.IDyeableArmorItem;
 import net.minecraft.item.ItemModelsProperties;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
@@ -44,6 +50,7 @@ public class ClientProxy extends CommonProxy {
     public static final ResourceLocation MODEL_REDMATTER_BLAST_ACCRETION_DISK = new ResourceLocation(ICBMReference.MODID + ":entity/redmatter_blast_accretion_disk");
     public static final ResourceLocation MODEL_REDMATTER_BLAST_SPHERE         = new ResourceLocation(ICBMReference.MODID + ":entity/redmatter_blast_sphere");
 
+    @SuppressWarnings("unchecked")
     public void onClientSetupEvent(FMLClientSetupEvent event) {
 
         // Set Render Layers
@@ -59,6 +66,8 @@ public class ClientProxy extends CommonProxy {
         RenderTypeLookup.setRenderLayer(BlockReg.SPIKES_FIRE.get(), RenderType.cutout());
 
         // Register Container Screens
+        //noinspection RedundantTypeArguments
+        ScreenManager.<ContainerCruiseLauncher, ScreenCruiseLauncher>register(ContainerReg.CRUISE_LAUNCHER.get(), ScreenCruiseLauncher::new);
         ScreenManager.register(ContainerReg.LAUNCHER_PLATFORM_T1.get(), ScreenLauncherPlatform::new);
         ScreenManager.register(ContainerReg.LAUNCHER_PLATFORM_T2.get(), ScreenLauncherPlatform::new);
         ScreenManager.register(ContainerReg.LAUNCHER_PLATFORM_T3.get(), ScreenLauncherPlatform::new);
@@ -121,10 +130,47 @@ public class ClientProxy extends CommonProxy {
         RenderingRegistry.registerEntityRenderingHandler(EntityReg.MISSILE_CLUSTER.get(), (manager) -> new EntityMissileRenderer(manager, ItemReg.MISSILE_CLUSTER.get().getDefaultInstance()));
         RenderingRegistry.registerEntityRenderingHandler(EntityReg.MISSILE_CLUSTER_NUCLEAR.get(), (manager) -> new EntityMissileRenderer(manager, ItemReg.MISSILE_CLUSTER_NUCLEAR.get().getDefaultInstance()));
 
+        // Register Grenade Entity Rendering Handlers
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.GRENADE_CONVENTIONAL.get(), (manager) -> new SpriteRenderer<>(manager, Minecraft.getInstance().getItemRenderer()));
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.GRENADE_SHRAPNEL.get(), (manager) -> new SpriteRenderer<>(manager, Minecraft.getInstance().getItemRenderer()));
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.GRENADE_INCENDIARY.get(), (manager) -> new SpriteRenderer<>(manager, Minecraft.getInstance().getItemRenderer()));
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.GRENADE_DEBILITATION.get(), (manager) -> new SpriteRenderer<>(manager, Minecraft.getInstance().getItemRenderer()));
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.GRENADE_CHEMICAL.get(), (manager) -> new SpriteRenderer<>(manager, Minecraft.getInstance().getItemRenderer()));
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.GRENADE_ANVIL.get(), (manager) -> new SpriteRenderer<>(manager, Minecraft.getInstance().getItemRenderer()));
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.GRENADE_REPULSIVE.get(), (manager) -> new SpriteRenderer<>(manager, Minecraft.getInstance().getItemRenderer()));
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.GRENADE_ATTRACTIVE.get(), (manager) -> new SpriteRenderer<>(manager, Minecraft.getInstance().getItemRenderer()));
+
+        // Register Minecart Entity Rendering Handlers
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_EXPLOSIVE.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_SHRAPNEL.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_INCENDIARY.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_DEBILITATION.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_CHEMICAL.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_ANVIL.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_REPULSIVE.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_ATTRACTIVE.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_NIGHTMARE.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_FRAGMENTATION.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_CONTAGION.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_SONIC.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_BREACHING.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_REJUVENATION.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_THERMOBARIC.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_NUCLEAR.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_EMP.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_EXOTHERMIC.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_ENDOTHERMIC.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_ANTIGRAVITATIONAL.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_ENDER.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_HYPERSONIC.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_ANTIMATTER.get(), TNTMinecartRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.MINECART_REDMATTER.get(), TNTMinecartRenderer::new);
+
         // Register Blast Utility Entity Rendering Handlers
         RenderingRegistry.registerEntityRenderingHandler(EntityReg.BLAST_CHEMICAL.get(), EntityNOPRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityReg.BLAST_CONTAGION.get(), EntityNOPRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityReg.BLAST_DEBILITATION.get(), EntityNOPRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityReg.BLAST_RADIATION.get(), EntityNOPRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityReg.BLAST_REDMATTER.get(), EntityRedmatterBlastRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityReg.BLAST_SONIC.get(), EntityNOPRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityReg.SHRAPNEL.get(), EntityShrapnelRenderer::new);
@@ -137,6 +183,17 @@ public class ClientProxy extends CommonProxy {
         // Register Item Model Properties
         ItemModelsProperties.register(ItemReg.TRACKER.get(), new ResourceLocation("angle"),          ItemTracker::getAngleFromItemStack);
         ItemModelsProperties.register(ItemReg.TRACKER.get(), new ResourceLocation("icbm:hastarget"), ItemTracker::getHasTargetFromItemStack);
+
+        // Register ItemColors for Dyeable Armor
+        Minecraft.getInstance().getItemColors().register(
+                (itemStack, tintIndex) -> {
+                    return tintIndex > 0 ? -1 : ((IDyeableArmorItem)itemStack.getItem()).getColor(itemStack);
+                },
+                ItemReg.HAZMAT_MASK.get(),
+                ItemReg.HAZMAT_JACKET.get(),
+                ItemReg.HAZMAT_PANTS.get(),
+                ItemReg.HAZMAT_BOOTS.get()
+        );
 
     }
 
@@ -184,9 +241,14 @@ public class ClientProxy extends CommonProxy {
     }
 
     public void updateScreenLauncherControlPanel() {
-        if (Minecraft.getInstance().screen instanceof ScreenLauncherControlPanel) {
-            ((ScreenLauncherControlPanel)Minecraft.getInstance().screen).updateGui();
+        if (Minecraft.getInstance().screen instanceof IScreenLaunchControlPanel) {
+            ((IScreenLaunchControlPanel)Minecraft.getInstance().screen).updateGui();
         }
+    }
+
+    public double getTileEntityUpdateDistance() {
+        double l1Distance = (Minecraft.getInstance().options.renderDistance + 1) * 16;
+        return Math.sqrt(l1Distance * l1Distance + l1Distance * l1Distance);
     }
 
 }

@@ -1,9 +1,9 @@
 package com.jdawg3636.icbm.common.capability.blastcontroller;
 
 import com.jdawg3636.icbm.ICBMReference;
+import com.jdawg3636.icbm.common.reg.BlastManagerThreadReg;
 import com.jdawg3636.icbm.common.thread.AbstractBlastManagerThread;
 import com.jdawg3636.icbm.common.thread.builder.AbstractBlastManagerThreadBuilder;
-import com.jdawg3636.icbm.common.reg.BlastManagerThreadReg;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.util.Direction;
@@ -39,7 +39,6 @@ public class BlastControllerCapabilityStorage implements Capability.IStorage<IBl
     public void readNBT(Capability<IBlastControllerCapability> capability, IBlastControllerCapability instance, Direction side, INBT nbt) {
         if(!(nbt instanceof CompoundNBT)) return;
         try {
-            CompoundNBT nbtCasted = (CompoundNBT) nbt;
             CompoundNBT blasts = ((CompoundNBT) nbt).getCompound("blasts");
             for (String blastID : blasts.getAllKeys()) {
 

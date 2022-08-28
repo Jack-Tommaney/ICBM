@@ -15,7 +15,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class ScreenLauncherControlPanel extends Screen {
+public class ScreenLauncherControlPanel extends Screen implements IScreenLaunchControlPanel {
 
     // TileEntity
     private final TileLauncherControlPanel tileEntity;
@@ -48,13 +48,25 @@ public class ScreenLauncherControlPanel extends Screen {
 
     public static boolean stringIsNumeric(String in) {
         if(in.equals("")) return true;
+        if(in.equals("-")) return true;
         try { Double.parseDouble(in); } catch (Exception e) { return false; }
         return true;
     }
 
+    public static boolean stringIsPositiveInteger(String in) {
+        if(in.equals("")) return true;
+        try {
+            int val = Integer.parseInt(in);
+            if(val < 0) return false;
+        } catch (Exception e) { return false; }
+        return true;
+    }
+
+    @SuppressWarnings("UnusedAssignment")
     @Override
     protected void init() {
 
+        assert this.minecraft != null;
         this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 
         int verticalIncrement = 1;
@@ -70,7 +82,7 @@ public class ScreenLauncherControlPanel extends Screen {
         textFieldTargetX.setFilter(ScreenLauncherControlPanel::stringIsNumeric);
         textFieldTargetZ.setFilter(ScreenLauncherControlPanel::stringIsNumeric);
         textFieldTargetY.setFilter(ScreenLauncherControlPanel::stringIsNumeric);
-        textFieldRadioFrequency.setFilter(ScreenLauncherControlPanel::stringIsNumeric);
+        textFieldRadioFrequency.setFilter(ScreenLauncherControlPanel::stringIsPositiveInteger);
 
         this.textFieldTargetX.setMaxLength(32500);
         this.textFieldTargetX.setMaxLength(32500);
@@ -82,6 +94,11 @@ public class ScreenLauncherControlPanel extends Screen {
         this.textFieldTargetZ.setValue(String.valueOf(tileEntity.getTargetZ()));
         this.textFieldTargetY.setValue(String.valueOf(tileEntity.getTargetY()));
         this.textFieldRadioFrequency.setValue(String.valueOf(tileEntity.getRadioFrequency()));
+
+        this.textFieldTargetX.moveCursorToStart();
+        this.textFieldTargetZ.moveCursorToStart();
+        this.textFieldTargetY.moveCursorToStart();
+        this.textFieldRadioFrequency.moveCursorToStart();
 
         if(!(tileEntity instanceof TileLauncherControlPanelT2)) {
             textFieldTargetY.setEditable(false);
@@ -102,6 +119,10 @@ public class ScreenLauncherControlPanel extends Screen {
         this.textFieldTargetZ.setValue(String.valueOf(tileEntity.getTargetZ()));
         this.textFieldTargetY.setValue(String.valueOf(tileEntity.getTargetY()));
         this.textFieldRadioFrequency.setValue(String.valueOf(tileEntity.getRadioFrequency()));
+        this.textFieldTargetX.moveCursorToStart();
+        this.textFieldTargetZ.moveCursorToStart();
+        this.textFieldTargetY.moveCursorToStart();
+        this.textFieldRadioFrequency.moveCursorToStart();
     }
 
     @Override
@@ -119,6 +140,7 @@ public class ScreenLauncherControlPanel extends Screen {
 
     @Override
     public void removed() {
+        assert this.minecraft != null;
         this.minecraft.keyboardHandler.setSendRepeatsToGui(false);
     }
 
@@ -142,12 +164,13 @@ public class ScreenLauncherControlPanel extends Screen {
         try { packetTargetX        = Double.parseDouble(textFieldTargetX.getValue()); } catch (Exception e) { packetShouldUpdate &= 0b1110; }
         try { packetTargetZ        = Double.parseDouble(textFieldTargetZ.getValue()); } catch (Exception e) { packetShouldUpdate &= 0b1101; }
         try { packetTargetY        = Double.parseDouble(textFieldTargetY.getValue()); } catch (Exception e) { packetShouldUpdate &= 0b1011; }
-        try { packetRadioFrequency = Integer.parseInt(textFieldRadioFrequency.getValue()); } catch (Exception e) { packetShouldUpdate |= 0b0111; }
+        try { packetRadioFrequency = Integer.parseInt(textFieldRadioFrequency.getValue()); } catch (Exception e) { packetShouldUpdate &= 0b0111; }
 
         ICBMNetworking.INSTANCE.sendToServer(new CPacketUpdateLauncherControlPanel(pos, packetShouldUpdate, packetTargetX, packetTargetZ, packetTargetY, packetRadioFrequency));
 
     }
 
+    @SuppressWarnings("UnusedAssignment")
     @Override
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         renderBackground(matrixStack);
@@ -167,8 +190,18 @@ public class ScreenLauncherControlPanel extends Screen {
         super.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
+    @SuppressWarnings("unused")
     public void renderGUITexture(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        /*
+        Using RenderSystem::color4f despite deprecation
+        From sciwhiz12 on April 17, 2021 in #modder-support-116 in The Forge Project discord (https://discord.com/channels/313125603924639766/725850371834118214/832995781510299688):
+        "as best as we can know, [RenderSystem::color4f is] deprecated by Mojang because people shouldn't be calling the GL methods directly, and instead use the batched rendering
+        system (the IRenderTypeBuffers, RenderType, etc) tho the one place where you can call them directly is during GUI rendering (because that's not batched), and is usually called
+        as the first thing in their rendering methods to make sure the GL color state is clear (like if a previous GUI changed the state but didn't revert it)"
+         */
+        //noinspection deprecation
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        assert this.minecraft != null;
         this.minecraft.getTextureManager().bind(TEXTURE);
         int relX = (this.width - this.imageWidth) / 2;
         int relY = (this.height - this.imageHeight) / 2;

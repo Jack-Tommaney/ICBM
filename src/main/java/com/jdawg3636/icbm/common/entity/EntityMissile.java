@@ -5,6 +5,7 @@ import com.jdawg3636.icbm.common.block.multiblock.IMissileLaunchApparatus;
 import com.jdawg3636.icbm.common.event.AbstractBlastEvent;
 import com.jdawg3636.icbm.common.reg.SoundEventReg;
 import net.minecraft.block.BlockState;
+import net.minecraft.command.impl.data.EntityDataAccessor;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MoverType;
@@ -49,7 +50,7 @@ public class EntityMissile extends Entity {
             this.blastType = blastType;
         }
 
-        private AbstractBlastEvent.Type blastType;
+        private final AbstractBlastEvent.Type blastType;
 
         public AbstractBlastEvent.Type getResultantBlastType() {
             return blastType;
@@ -59,25 +60,21 @@ public class EntityMissile extends Entity {
 
     public enum MissileLaunchPhase {
         STATIONARY,
-        STATIONARY_ACTIVATED, // Generate Particles/Sounds while still on the platform
+        STATIONARY_ACTIVATED, // Generate Particles/Sounds while still on the platform // todo: use this or remove it
         LAUNCHED
     }
 
     public static final DataParameter<Integer>  MISSILE_SOURCE_TYPE  = EntityDataManager.defineId(EntityMissile.class, DataSerializers.INT);
     public static final DataParameter<Integer>  MISSILE_LAUNCH_PHASE = EntityDataManager.defineId(EntityMissile.class, DataSerializers.INT);
-    public static final DataParameter<BlockPos> SOURCE_POS           = EntityDataManager.defineId(EntityMissile.class, DataSerializers.BLOCK_POS);
-    public static final DataParameter<BlockPos> DEST_POS             = EntityDataManager.defineId(EntityMissile.class, DataSerializers.BLOCK_POS);
-    public static final DataParameter<Float>    PEAK_HEIGHT          = EntityDataManager.defineId(EntityMissile.class, DataSerializers.FLOAT);
-    public static final DataParameter<Integer>  TOTAL_FLIGHT_TICKS   = EntityDataManager.defineId(EntityMissile.class, DataSerializers.INT);
 
-    public AbstractBlastEvent.BlastEventProvider blastEventProvider;
-    public RegistryObject<Item> missileItem;
-    public MissileSourceType missileSourceType = MissileSourceType.LAUNCHER_PLATFORM;
-    public MissileLaunchPhase missileLaunchPhase = MissileLaunchPhase.STATIONARY;
-    public BlockPos sourcePos = BlockPos.ZERO;
-    public BlockPos destPos = BlockPos.ZERO.offset(100, 0, 0);
-    public double peakHeight = 256;
-    public int totalFlightTicks = 300;
+    public final AbstractBlastEvent.BlastEventProvider blastEventProvider;
+    public final RegistryObject<Item> missileItem;
+    public MissileSourceType missileSourceType;
+    public MissileLaunchPhase missileLaunchPhase;
+    public BlockPos sourcePos;
+    public BlockPos destPos;
+    public double peakHeight;
+    public int totalFlightTicks;
     public Function<Integer, Vector3d> pathFunction = null;
     public Function<Vector3d, Vector3d> gradientFunction = null;
 
@@ -217,15 +214,9 @@ public class EntityMissile extends Entity {
 
                     @Override
                     public Vector3d apply(Vector3d position) {
-
                         double rotXFromX = rotXMultipleFromX * Math.toDegrees(Math.atan(2d * funcParabolaXCoefficients[0] * position.x + funcParabolaXCoefficients[1]));
                         double rotXFromZ = rotXMultipleFromZ * Math.toDegrees(Math.atan(2d * funcParabolaZCoefficients[0] * position.z + funcParabolaZCoefficients[1]));
-
-                        Vector3d toReturn = new Vector3d((!Double.isNaN(funcParabolaXCoefficients[0]) ? rotXFromX : rotXFromZ), funcRotY, 0D);
-                        //System.out.printf("[ICBM DEBUG] Position = (%s, %s)\n", position.x, position.z);
-                        //System.out.printf("[ICBM DEBUG] Applying Rotation (%s, %s)\n", toReturn.x(), toReturn.y());
-                        return toReturn;
-
+                        return new Vector3d((!Double.isNaN(funcParabolaXCoefficients[0]) ? rotXFromX : rotXFromZ), funcRotY, 0D);
                     }
 
                 }
@@ -242,7 +233,7 @@ public class EntityMissile extends Entity {
         // ax^2 + bx + c = y
         // Somewhat inverted as x^2, x, and 1 are the known coefficients while a, b, c are being solved for.
 
-        // Ensure that that the First Equation (x1Squared * a + x1 * b + x1Const * c = y1) has the higher absolute value
+        // Ensure that the First Equation (x1Squared * a + x1 * b + x1Const * c = y1) has the higher absolute value
         // of x (and therefore higher x^2) as otherwise a value of 0 could cause serious problems
         final boolean sourceHorizAbsIsGreater = Math.abs(sourceHoriz) > Math.abs(targetHoriz);
 
@@ -271,22 +262,22 @@ public class EntityMissile extends Entity {
 
         // Scale Equation 2 using Equation 1
         multiple    = -x2Squared/x1Squared;
-        x2Squared   += multiple * x1Squared;
+        //x2Squared   += multiple * x1Squared;
         x2          += multiple * x1;
         x2Const     += multiple * x1Const;
         y2          += multiple * y1;
 
         // Scale Equation 3 using Equation 1
         multiple    = -x3Squared/x1Squared;
-        x3Squared   += multiple * x1Squared;
+        //x3Squared   += multiple * x1Squared;
         x3          += multiple * x1;
         x3Const     += multiple * x1Const;
         y3          += multiple * y1;
 
         // Scale Equation 3 using Equation 2
         multiple    = -x3/x2;
-        x3Squared   += multiple * x2Squared;
-        x3          += multiple * x2;
+        //x3Squared   += multiple * x2Squared;
+        //x3          += multiple * x2;
         x3Const     += multiple * x2Const;
         y3          += multiple * y2;
 
@@ -344,8 +335,8 @@ public class EntityMissile extends Entity {
                     this.setRot((float)newRot.y, (float)newRot.x);
 
                 } else {
-                    Vector3d newPos = pathFunction.apply(ticksSinceLaunch);
-                    spawnParticles(getX() - newPos.x(), getY() - newPos.y(), getZ() - newPos.z());
+                    Vector3d viewVector = getViewVector(0F);
+                    spawnParticles(-viewVector.x, -viewVector.y, -viewVector.z);
                 }
 
                 break;
@@ -369,9 +360,7 @@ public class EntityMissile extends Entity {
         ISelectionContext iselectioncontext = ISelectionContext.of(this);
         VoxelShape voxelshape = this.level.getWorldBorder().getCollisionShape();
         Stream<VoxelShape> stream = VoxelShapes.joinIsNotEmpty(voxelshape, VoxelShapes.create(axisalignedbb.deflate(1.0E-7D)), IBooleanFunction.AND) ? Stream.empty() : Stream.of(voxelshape);
-        Stream<VoxelShape> stream1 = this.level.getEntityCollisions(this, axisalignedbb.expandTowards(pVec), (p_233561_0_) -> {
-            return true;
-        });
+        Stream<VoxelShape> stream1 = this.level.getEntityCollisions(this, axisalignedbb.expandTowards(pVec), (p_233561_0_) -> true);
         ReuseableStream<VoxelShape> reuseablestream = new ReuseableStream<>(Stream.concat(stream1, stream));
         Vector3d vector3d = pVec.lengthSqr() == 0.0D ? pVec : collideBoundingBoxFiltered(this, pVec, axisalignedbb, this.level, iselectioncontext, reuseablestream);
         boolean flag = pVec.x != vector3d.x;
@@ -420,16 +409,6 @@ public class EntityMissile extends Entity {
     }
 
     @Override
-    protected void defineSynchedData() {
-        entityData.define(MISSILE_SOURCE_TYPE, MissileSourceType.LAUNCHER_PLATFORM.ordinal());
-        entityData.define(MISSILE_LAUNCH_PHASE, MissileLaunchPhase.STATIONARY.ordinal());
-        entityData.define(SOURCE_POS, BlockPos.ZERO);
-        entityData.define(DEST_POS, BlockPos.ZERO.offset(100, 0, 0));
-        entityData.define(PEAK_HEIGHT, 256F);
-        entityData.define(TOTAL_FLIGHT_TICKS, 300);
-    }
-
-    @Override
     protected void addAdditionalSaveData(CompoundNBT compound) {
 
         compound.putInt("MissileSourceType", missileSourceType.ordinal());
@@ -457,33 +436,56 @@ public class EntityMissile extends Entity {
         int sourcePosX = compound.getInt("SourcePosX");
         int sourcePosY = compound.getInt("SourcePosY");
         int sourcePosZ = compound.getInt("SourcePosZ");
-        entityData.set(SOURCE_POS, new BlockPos(sourcePosX, sourcePosY, sourcePosZ));
+        sourcePos = new BlockPos(sourcePosX, sourcePosY, sourcePosZ);
 
         int destPosX = compound.getInt("DestPosX");
         int destPosY = compound.getInt("DestPosY");
         int destPosZ = compound.getInt("DestPosZ");
-        entityData.set(DEST_POS, new BlockPos(destPosX, destPosY, destPosZ));
+        destPos = new BlockPos(destPosX, destPosY, destPosZ);
 
-        entityData.set(PEAK_HEIGHT, compound.getFloat("PeakHeight"));
-        entityData.set(TOTAL_FLIGHT_TICKS, compound.getInt("TotalFlightTicks"));
+        peakHeight = compound.getFloat("PeakHeight");
+        totalFlightTicks = compound.getInt("TotalFlightTicks");
 
-        updatePathFunctions();
+        if(level != null && !level.isClientSide()) {
+            updatePathFunctions();
+        }
 
     }
 
     @Override
+    protected void defineSynchedData() {
+        entityData.define(MISSILE_SOURCE_TYPE, MissileSourceType.LAUNCHER_PLATFORM.ordinal());
+        entityData.define(MISSILE_LAUNCH_PHASE, MissileLaunchPhase.STATIONARY.ordinal());
+    }
+
+    @Override
     public void onSyncedDataUpdated(DataParameter<?> dataParameter) {
-        if(MISSILE_SOURCE_TYPE.equals(dataParameter))  missileSourceType  = MissileSourceType.values()[entityData.get(MISSILE_SOURCE_TYPE)];
-        if(MISSILE_LAUNCH_PHASE.equals(dataParameter)) missileLaunchPhase = MissileLaunchPhase.values()[entityData.get(MISSILE_LAUNCH_PHASE)];
-        if(SOURCE_POS.equals(dataParameter))           sourcePos          = entityData.get(SOURCE_POS);
-        if(DEST_POS.equals(dataParameter))             destPos            = entityData.get(DEST_POS);
-        if(PEAK_HEIGHT.equals(dataParameter))          peakHeight         = entityData.get(PEAK_HEIGHT);
-        if(TOTAL_FLIGHT_TICKS.equals(dataParameter))   totalFlightTicks   = entityData.get(TOTAL_FLIGHT_TICKS);
-        if(level.isClientSide) {
-            //System.out.print("[ICBM DEBUG] Syncing Missile Save Data!");
-            //System.out.println(" Side = " + ((level.isClientSide) ? "Client" : "Server"));
-            updatePathFunctions();
+        if(MISSILE_SOURCE_TYPE.equals(dataParameter)) {
+            missileSourceType = MissileSourceType.values()[entityData.get(MISSILE_SOURCE_TYPE)];
         }
+        if(MISSILE_LAUNCH_PHASE.equals(dataParameter)) {
+            missileLaunchPhase = MissileLaunchPhase.values()[entityData.get(MISSILE_LAUNCH_PHASE)];
+        }
+    }
+
+    public void updateMissileData(BlockPos sourcePos, BlockPos destPos, Float peakHeight, Integer totalFlightTicks, MissileSourceType missileSourceType, MissileLaunchPhase missileLaunchPhase) {
+        EntityDataAccessor entityDataAccessor = new EntityDataAccessor(this);
+        CompoundNBT data = entityDataAccessor.getData();
+        if(sourcePos != null) {
+            data.putInt("SourcePosX", sourcePos.getX());
+            data.putInt("SourcePosY", sourcePos.getY());
+            data.putInt("SourcePosZ", sourcePos.getZ());
+        }
+        if(destPos != null) {
+            data.putInt("DestPosX", destPos.getX());
+            data.putInt("DestPosY", destPos.getY());
+            data.putInt("DestPosZ", destPos.getZ());
+        }
+        if(peakHeight != null) data.putFloat("PeakHeight", peakHeight);
+        if(totalFlightTicks != null) data.putInt("TotalFlightTicks", totalFlightTicks);
+        if(missileSourceType != null) data.putInt("MissileSourceType", missileSourceType.ordinal());
+        if(missileLaunchPhase != null) data.putInt("MissileLaunchPhase", missileLaunchPhase.ordinal());
+        try { entityDataAccessor.setData(data); } catch (Exception e) { e.printStackTrace(); }
     }
 
     @Override
@@ -537,6 +539,7 @@ public class EntityMissile extends Entity {
         }
     }
 
+    // Override to Expand Access to Public
     @Override
     public void setRot(float yRot, float xRot) {
         super.setRot(yRot, xRot);

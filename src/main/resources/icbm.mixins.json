@@ -5,8 +5,9 @@
   "refmap": "icbm.refmap.json",
   "mixins": [],
   "client": [
+    "MixinClientOBJLightingPipeline",
     "MixinClientRocketLauncherPose"
   ],
   "server": [],
-  "minVersion": "0.8.4"
+  "minVersion": "0.8.2"
 }

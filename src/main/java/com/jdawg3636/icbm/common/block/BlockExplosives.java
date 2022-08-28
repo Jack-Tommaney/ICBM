@@ -21,6 +21,8 @@ import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
@@ -32,9 +34,9 @@ import javax.annotation.Nullable;
 // Had to be duplicated rather than extended because the explode() method is static
 public class BlockExplosives extends Block {
 
-    public RegistryObject<EntityType<EntityPrimedExplosives>> entityForm;
-    public AbstractBlastEvent.BlastEventProvider blastEventProvider;
-    public RegistryObject<Item> itemForm;
+    public final RegistryObject<EntityType<EntityPrimedExplosives>> entityForm;
+    public final AbstractBlastEvent.BlastEventProvider blastEventProvider;
+    public final RegistryObject<Item> itemForm;
 
     /**
      * Parameterless Constructor
@@ -150,6 +152,7 @@ public class BlockExplosives extends Block {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public void onPlace(BlockState state, World worldIn, BlockPos pos, BlockState oldState, boolean isMoving) {
         if (!oldState.is(state.getBlock())) {
             Direction neighborSignalDirection = getNeighborSignalDirection(worldIn, pos);
@@ -160,6 +163,7 @@ public class BlockExplosives extends Block {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos, boolean isMoving) {
         if (worldIn.hasNeighborSignal(pos)) {
             explode(worldIn, pos, null, getDirectionBetweenBlockPos(fromPos, pos));
@@ -177,6 +181,7 @@ public class BlockExplosives extends Block {
         super.playerWillDestroy(worldIn, pos, state, player);
     }
 
+    @SuppressWarnings("deprecation")
     public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         ItemStack itemstack = player.getItemInHand(handIn);
         Item item = itemstack.getItem();
@@ -197,6 +202,7 @@ public class BlockExplosives extends Block {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public void onProjectileHit(World worldIn, BlockState state, BlockRayTraceResult hit, ProjectileEntity projectile) {
         if (!worldIn.isClientSide) {
             Entity entity = projectile.getOwner();
@@ -211,12 +217,22 @@ public class BlockExplosives extends Block {
     /**
      * Return whether this block can drop from an explosion.
      */
+    @SuppressWarnings("deprecation")
     public boolean dropFromExplosion(Explosion explosionIn) {
         return false;
     }
 
     protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
         builder.add(UNSTABLE);
+    }
+
+    public static VoxelShape combine(VoxelShape... shapes) {
+        if(shapes.length == 0) return null;
+        VoxelShape combined = shapes[0];
+        for(int i = 1; i < shapes.length; ++i) {
+            combined = VoxelShapes.or(combined, shapes[i]);
+        }
+        return combined;
     }
 
 }
