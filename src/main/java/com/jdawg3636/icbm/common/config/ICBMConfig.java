@@ -43,6 +43,8 @@ public class ICBMConfig {
 
         private final ForgeConfigSpec.BooleanValue enableEasterEggForRedcoats;
 
+        private final ForgeConfigSpec.IntValue numBlocksStraightUpForLauncherPlatform;
+
         private final ForgeConfigSpec.DoubleValue antimatterFuzzinessPercentage;
 
         private final ForgeConfigSpec.IntValue blastDepthBreaching;
@@ -89,6 +91,11 @@ public class ICBMConfig {
                             "have the \"unstable = true\" variant of the BlockState, causing them to automatically ignite",
                             "when broken rather than drop as an item.")
                     .define("enableEasterEggForRedcoats", true);
+                    this.numBlocksStraightUpForLauncherPlatform = builder
+                    .comment("",
+                            "Defines the number of blocks that a missile launched from a launcher",
+                            "platform will fly straight up before starting its trajectory.")
+                    .defineInRange("numBlocksStraightUpForLauncherPlatform", 20, 0, 250);
             this.antimatterFuzzinessPercentage = builder
                     .comment("",
                             "Defines the percentage, as a decimal (0.0 = 0%, 1.0 = 100%), that a block within the \"fuzzy\"",
@@ -186,6 +193,10 @@ public class ICBMConfig {
 
         public boolean getEnableEasterEggForRedcoats() {
             return enableEasterEggForRedcoats.get();
+        }
+
+        public int getnumBlocksStraightUpForLauncherPlatform() {
+            return numBlocksStraightUpForLauncherPlatform.get();
         }
 
         public double getAntimatterFuzzinessPercentage() {

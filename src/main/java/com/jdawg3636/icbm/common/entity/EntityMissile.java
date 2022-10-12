@@ -199,6 +199,8 @@ public class EntityMissile extends Entity {
                         double yFromZ = funcParabolaZCoefficients[0] * z * z + funcParabolaZCoefficients[1] * z + funcParabolaZCoefficients[2];
                         double y = !Double.isNaN(funcParabolaXCoefficients[0]) ? yFromX : yFromZ;
 
+                        //Insert Configured StraightUp Code Here?? --JT
+
                         return new Vector3d(x, y, z);
 
                     }
